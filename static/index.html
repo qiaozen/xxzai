@@ -1,0 +1,976 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<title>小小臻AI</title>
+<style>
+  /* ============ 基础 ============ */
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    -webkit-tap-highlight-color: transparent;
+  }
+  :root {
+    --ios-blue: #0a84ff;
+    --ios-blue-2: #5e5ce6;
+    --ios-purple: #bf5af2;
+    --ios-bg: #f2f2f7;
+    --ios-card: #ffffff;
+    --ios-text: #1c1c1e;
+    --ios-text-2: #8e8e93;
+    --ios-sep: rgba(60,60,67,0.08);
+    --ios-green: #34c759;
+    --ios-orange: #ff9500;
+    --ios-red: #ff3b30;
+    --ios-yellow: #ffcc00;
+    --radius-bubble: 20px;
+    --ease-bounce: cubic-bezier(0.34, 1.56, 0.64, 1);
+    --ease-smooth: cubic-bezier(0.25, 0.1, 0.25, 1);
+  }
+  html, body {
+    height: 100%;
+    overflow: hidden;
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "PingFang SC",
+                 "Helvetica Neue", "Microsoft YaHei", sans-serif;
+    background: var(--ios-bg);
+    color: var(--ios-text);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ============ 应用容器 ============ */
+  .app {
+    height: 100vh;
+    height: 100dvh;
+    display: flex;
+    flex-direction: column;
+    background:
+      radial-gradient(1200px 500px at 100% -10%, rgba(191,90,242,0.12), transparent 60%),
+      radial-gradient(900px 500px at -10% 110%, rgba(10,132,255,0.12), transparent 60%),
+      var(--ios-bg);
+    position: relative;
+  }
+
+  /* ============ 顶部导航（毛玻璃）============ */
+  .nav {
+    position: relative;
+    z-index: 10;
+    padding: calc(env(safe-area-inset-top) + 12px) 16px 12px;
+    background: rgba(255,255,255,0.75);
+    backdrop-filter: saturate(180%) blur(20px);
+    -webkit-backdrop-filter: saturate(180%) blur(20px);
+    border-bottom: 0.5px solid var(--ios-sep);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .logo {
+    width: 36px; height: 36px;
+    border-radius: 11px;
+    background: linear-gradient(135deg, var(--ios-blue), var(--ios-purple));
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px;
+    box-shadow: 0 4px 12px rgba(10,132,255,0.35);
+    animation: logoIn .6s var(--ease-bounce) both;
+  }
+  @keyframes logoIn {
+    0% { transform: scale(0.3) rotate(-20deg); opacity: 0; }
+    100% { transform: scale(1) rotate(0); opacity: 1; }
+  }
+  .title-wrap { flex: 1; min-width: 0; }
+  .title {
+    font-size: 17px; font-weight: 600; letter-spacing: -.4px;
+    background: linear-gradient(90deg, var(--ios-blue), var(--ios-purple));
+    -webkit-background-clip: text; background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .subtitle {
+    font-size: 11px; color: var(--ios-text-2);
+    display: flex; align-items: center; gap: 6px; margin-top: 1px;
+  }
+  .credits-pill {
+    display: inline-flex; align-items: center; gap: 4px;
+    background: linear-gradient(135deg, #fff6e0, #ffe9c2);
+    color: #8a5a00;
+    padding: 3px 9px; border-radius: 999px;
+    font-size: 12px; font-weight: 600;
+    transition: transform .3s var(--ease-bounce);
+  }
+  .credits-pill.bump { animation: bump .5s var(--ease-bounce); }
+  @keyframes bump {
+    0% { transform: scale(1); }
+    40% { transform: scale(1.25); }
+    100% { transform: scale(1); }
+  }
+  .icon-btn {
+    width: 36px; height: 36px;
+    border-radius: 11px;
+    border: none;
+    background: rgba(120,120,128,0.12);
+    color: var(--ios-text);
+    font-size: 17px;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    transition: transform .15s var(--ease-bounce), background .2s;
+  }
+  .icon-btn:active { transform: scale(0.88); background: rgba(120,120,128,0.22); }
+
+  /* ============ 快捷工具栏（胶囊）============ */
+  .quickbar {
+    display: flex; gap: 8px;
+    padding: 12px 16px 4px;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .quickbar::-webkit-scrollbar { display: none; }
+  .chip {
+    flex-shrink: 0;
+    padding: 8px 14px;
+    border-radius: 999px;
+    border: none;
+    background: rgba(255,255,255,0.9);
+    color: var(--ios-text);
+    font-size: 13px; font-weight: 500;
+    display: flex; align-items: center; gap: 5px;
+    cursor: pointer;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06), 0 0 0 0.5px rgba(0,0,0,0.04);
+    transition: transform .2s var(--ease-bounce), box-shadow .2s;
+    animation: chipIn .5s var(--ease-bounce) both;
+  }
+  .chip:nth-child(1) { animation-delay: .05s; }
+  .chip:nth-child(2) { animation-delay: .1s; }
+  .chip:nth-child(3) { animation-delay: .15s; }
+  .chip:active {
+    transform: scale(0.92);
+    box-shadow: 0 0 0 0.5px rgba(0,0,0,0.06);
+  }
+  @keyframes chipIn {
+    0% { transform: translateY(10px) scale(.8); opacity: 0; }
+    100% { transform: translateY(0) scale(1); opacity: 1; }
+  }
+  .chip .emoji { font-size: 15px; }
+
+  /* ============ 聊天区 ============ */
+  .chat {
+    flex: 1;
+    overflow-y: auto;
+    padding: 12px 16px 8px;
+    scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .chat::-webkit-scrollbar { width: 4px; }
+  .chat::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.1); border-radius: 4px; }
+
+  /* 气泡 */
+  .msg {
+    display: flex;
+    flex-direction: column;
+    max-width: 100%;
+    animation: msgIn .45s var(--ease-bounce) both;
+    transform-origin: bottom;
+  }
+  @keyframes msgIn {
+    0% { transform: translateY(14px) scale(.9); opacity: 0; }
+    60% { transform: translateY(-2px) scale(1.02); opacity: 1; }
+    100% { transform: translateY(0) scale(1); opacity: 1; }
+  }
+  .msg.user { align-items: flex-end; }
+  .msg.bot { align-items: flex-start; }
+
+  .bubble {
+    max-width: 82%;
+    padding: 10px 14px;
+    border-radius: var(--radius-bubble);
+    font-size: 15px;
+    line-height: 1.45;
+    white-space: pre-wrap;
+    word-break: break-word;
+    letter-spacing: -.2px;
+    position: relative;
+  }
+  .msg.user .bubble {
+    background: linear-gradient(135deg, #0a84ff, #5e5ce6);
+    color: #fff;
+    border-bottom-right-radius: 6px;
+    box-shadow: 0 4px 14px rgba(10,132,255,0.28);
+  }
+  .msg.bot .bubble {
+    background: var(--ios-card);
+    color: var(--ios-text);
+    border-bottom-left-radius: 6px;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.04), 0 0 0 0.5px rgba(0,0,0,0.05);
+  }
+
+  .meta {
+    font-size: 11px;
+    color: var(--ios-text-2);
+    margin: 4px 6px 0;
+    letter-spacing: -.1px;
+  }
+
+  /* 文件气泡 */
+  .file-bubble {
+    background: linear-gradient(135deg, #e8fff0, #d4f5e0) !important;
+    color: #0b5d2e !important;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.04), 0 0 0 0.5px rgba(52,199,89,0.3) !important;
+  }
+  .file-bubble a {
+    color: #0a84ff; text-decoration: none; font-weight: 600;
+    display: inline-flex; align-items: center; gap: 6px;
+  }
+  .file-bubble a::before { content: "📄"; }
+  .file-bubble pre {
+    margin-top: 10px;
+    font-size: 12px;
+    max-height: 180px;
+    overflow: auto;
+    background: rgba(0,0,0,0.06);
+    padding: 10px;
+    border-radius: 10px;
+    font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  }
+
+  /* 打字动画 */
+  .typing {
+    display: inline-flex;
+    gap: 4px;
+    padding: 4px 0;
+  }
+  .typing i {
+    width: 7px; height: 7px;
+    background: #b0b0b8;
+    border-radius: 50%;
+    display: inline-block;
+    animation: blink 1.3s infinite ease-in-out both;
+  }
+  .typing i:nth-child(2) { animation-delay: .16s; }
+  .typing i:nth-child(3) { animation-delay: .32s; }
+  @keyframes blink {
+    0%, 80%, 100% { transform: scale(0.6); opacity: .4; }
+    40% { transform: scale(1.15); opacity: 1; }
+  }
+
+  /* ============ 底部输入栏（毛玻璃 + 胶囊）============ */
+  .inputbar {
+    padding: 8px 12px calc(env(safe-area-inset-bottom) + 10px);
+    background: rgba(255,255,255,0.72);
+    backdrop-filter: saturate(180%) blur(20px);
+    -webkit-backdrop-filter: saturate(180%) blur(20px);
+    border-top: 0.5px solid var(--ios-sep);
+    display: flex;
+    align-items: flex-end;
+    gap: 8px;
+  }
+  .input-wrap {
+    flex: 1;
+    background: rgba(120,120,128,0.12);
+    border-radius: 22px;
+    padding: 6px 6px 6px 14px;
+    display: flex;
+    align-items: flex-end;
+    transition: background .25s, box-shadow .25s, transform .25s var(--ease-bounce);
+    min-height: 40px;
+  }
+  .input-wrap:focus-within {
+    background: #fff;
+    box-shadow: 0 0 0 3px rgba(10,132,255,0.18), 0 4px 14px rgba(10,132,255,0.12);
+    transform: translateY(-1px);
+  }
+  #input {
+    flex: 1;
+    border: none;
+    outline: none;
+    background: transparent;
+    font-size: 16px; /* 16px 防止 iOS 自动缩放 */
+    line-height: 1.4;
+    resize: none;
+    max-height: 120px;
+    font-family: inherit;
+    color: var(--ios-text);
+    padding: 6px 4px 6px 0;
+    letter-spacing: -.2px;
+  }
+  #input::placeholder { color: var(--ios-text-2); }
+
+  .send-btn {
+    width: 32px; height: 32px;
+    border-radius: 50%;
+    border: none;
+    background: linear-gradient(135deg, var(--ios-blue), var(--ios-purple));
+    color: #fff;
+    font-size: 16px;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 4px 10px rgba(10,132,255,0.35);
+    transition: transform .18s var(--ease-bounce), opacity .2s;
+    flex-shrink: 0;
+    margin-bottom: 4px;
+  }
+  .send-btn:active { transform: scale(0.85); }
+  .send-btn:disabled { opacity: .4; }
+
+  /* ============ 管理面板 ============ */
+  .panel-mask {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.35);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    z-index: 100;
+    display: none;
+    align-items: flex-end;
+    opacity: 0;
+    transition: opacity .3s var(--ease-smooth);
+  }
+  .panel-mask.show { display: flex; opacity: 1; }
+  .panel {
+    width: 100%;
+    max-height: 88vh;
+    background: #fbfbfd;
+    border-radius: 28px 28px 0 0;
+    padding: 8px 20px calc(env(safe-area-inset-bottom) + 20px);
+    overflow-y: auto;
+    transform: translateY(100%);
+    transition: transform .4s var(--ease-bounce);
+    -webkit-overflow-scrolling: touch;
+  }
+  .panel-mask.show .panel { transform: translateY(0); }
+  .grabber {
+    width: 38px; height: 5px;
+    background: rgba(60,60,67,0.25);
+    border-radius: 999px;
+    margin: 6px auto 14px;
+  }
+  .panel h2 {
+    font-size: 22px; font-weight: 700;
+    letter-spacing: -.5px;
+    margin-bottom: 4px;
+  }
+  .panel h3 {
+    font-size: 13px; font-weight: 600;
+    color: var(--ios-text-2);
+    text-transform: uppercase;
+    letter-spacing: .5px;
+    margin: 20px 0 8px;
+  }
+
+  .stat-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+    margin-top: 12px;
+  }
+  .stat-card {
+    background: #fff;
+    padding: 14px;
+    border-radius: 16px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04), 0 0 0 0.5px rgba(0,0,0,0.04);
+    animation: cardIn .4s var(--ease-bounce) both;
+  }
+  .stat-card:nth-child(1){ animation-delay:.03s; }
+  .stat-card:nth-child(2){ animation-delay:.06s; }
+  .stat-card:nth-child(3){ animation-delay:.09s; }
+  .stat-card:nth-child(4){ animation-delay:.12s; }
+  .stat-card:nth-child(5){ animation-delay:.15s; }
+  @keyframes cardIn {
+    0% { transform: scale(.85); opacity: 0; }
+    100% { transform: scale(1); opacity: 1; }
+  }
+  .stat-card .label { font-size: 12px; color: var(--ios-text-2); }
+  .stat-card .value {
+    font-size: 22px; font-weight: 700;
+    letter-spacing: -.5px;
+    margin-top: 4px;
+    background: linear-gradient(135deg, var(--ios-blue), var(--ios-purple));
+    -webkit-background-clip: text; background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .stat-card .value.small { font-size: 13px; }
+
+  .form-row {
+    display: flex; gap: 8px;
+    margin-bottom: 8px;
+  }
+  .form-row input {
+    flex: 1; min-width: 0;
+    padding: 12px 14px;
+    border-radius: 12px;
+    border: none;
+    background: rgba(120,120,128,0.1);
+    font-size: 15px;
+    outline: none;
+    font-family: inherit;
+    transition: background .2s, box-shadow .2s;
+    color: var(--ios-text);
+  }
+  .form-row input:focus {
+    background: #fff;
+    box-shadow: 0 0 0 3px rgba(10,132,255,0.18);
+  }
+  .btn {
+    padding: 11px 16px;
+    border-radius: 12px;
+    border: none;
+    font-size: 14px;
+    font-weight: 600;
+    font-family: inherit;
+    cursor: pointer;
+    transition: transform .15s var(--ease-bounce), filter .2s;
+    white-space: nowrap;
+    color: #fff;
+    letter-spacing: -.2px;
+  }
+  .btn:active { transform: scale(0.94); }
+  .btn.blue { background: linear-gradient(135deg, #0a84ff, #5e5ce6); }
+  .btn.green { background: linear-gradient(135deg, #34c759, #30d158); }
+  .btn.red { background: linear-gradient(135deg, #ff3b30, #ff453a); }
+  .btn.gray { background: rgba(120,120,128,0.15); color: var(--ios-text); }
+  .btn:disabled { opacity: .5; }
+
+  .user-list {
+    margin-top: 8px;
+    background: #fff;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04), 0 0 0 0.5px rgba(0,0,0,0.04);
+  }
+  .user-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 14px;
+    border-bottom: 0.5px solid var(--ios-sep);
+    font-size: 14px;
+    animation: rowIn .3s var(--ease-smooth) both;
+  }
+  .user-row:last-child { border-bottom: none; }
+  @keyframes rowIn {
+    0% { transform: translateX(-8px); opacity: 0; }
+    100% { transform: translateX(0); opacity: 1; }
+  }
+  .avatar {
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--ios-blue), var(--ios-purple));
+    color: #fff;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 15px; font-weight: 600;
+    flex-shrink: 0;
+  }
+  .user-info { flex: 1; min-width: 0; }
+  .user-name {
+    font-weight: 600;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .user-id { font-size: 11px; color: var(--ios-text-2); margin-top: 1px; }
+  .user-credits {
+    font-size: 13px; font-weight: 600;
+    color: var(--ios-orange);
+    background: rgba(255,149,0,0.1);
+    padding: 4px 9px;
+    border-radius: 999px;
+  }
+  .user-status {
+    font-size: 11px;
+    padding: 3px 8px;
+    border-radius: 999px;
+    font-weight: 600;
+  }
+  .user-status.ok { color: #0b5d2e; background: rgba(52,199,89,0.15); }
+  .user-status.ban { color: #a3180f; background: rgba(255,59,48,0.15); }
+
+  .close-btn {
+    position: absolute;
+    top: 18px; right: 18px;
+    width: 32px; height: 32px;
+    border-radius: 50%;
+    border: none;
+    background: rgba(120,120,128,0.15);
+    color: var(--ios-text-2);
+    font-size: 15px;
+    cursor: pointer;
+    transition: transform .15s var(--ease-bounce);
+  }
+  .close-btn:active { transform: scale(0.85); }
+
+  /* Toast */
+  .toast {
+    position: fixed;
+    left: 50%;
+    top: calc(env(safe-area-inset-top) + 70px);
+    transform: translate(-50%, -30px) scale(.9);
+    background: rgba(0,0,0,0.8);
+    color: #fff;
+    padding: 10px 18px;
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: 500;
+    z-index: 999;
+    opacity: 0;
+    pointer-events: none;
+    transition: all .35s var(--ease-bounce);
+    backdrop-filter: blur(10px);
+  }
+  .toast.show {
+    opacity: 1;
+    transform: translate(-50%, 0) scale(1);
+  }
+
+  /* 横向滑动选择器 */
+  .seg {
+    display: flex;
+    background: rgba(120,120,128,0.12);
+    border-radius: 10px;
+    padding: 3px;
+    margin-bottom: 10px;
+  }
+  .seg button {
+    flex: 1;
+    padding: 8px;
+    border: none;
+    background: transparent;
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 600;
+    border-radius: 8px;
+    color: var(--ios-text-2);
+    cursor: pointer;
+    transition: all .25s var(--ease-bounce);
+  }
+  .seg button.on {
+    background: #fff;
+    color: var(--ios-text);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- 顶部导航 -->
+  <div class="nav">
+    <div class="logo">👾</div>
+    <div class="title-wrap">
+      <div class="title">小小臻AI</div>
+      <div class="subtitle">
+        <span id="uid-label">ID: -</span>
+      </div>
+    </div>
+    <div class="credits-pill" id="credits-pill">
+      💰 <span id="credits">0</span>
+    </div>
+    <button class="icon-btn" id="btn-admin" style="display:none" title="管理">⚙️</button>
+  </div>
+
+  <!-- 快捷操作 -->
+  <div class="quickbar">
+    <button class="chip" id="btn-checkin"><span class="emoji">🎁</span>签到</button>
+    <button class="chip" id="btn-me"><span class="emoji">👤</span>我的</button>
+    <button class="chip" id="btn-clear"><span class="emoji">🧹</span>清空对话</button>
+  </div>
+
+  <!-- 聊天区 -->
+  <div class="chat" id="chat"></div>
+
+  <!-- 底部输入栏 -->
+  <div class="inputbar">
+    <div class="input-wrap">
+      <textarea id="input" placeholder="发消息…" rows="1"></textarea>
+      <button class="send-btn" id="send">↑</button>
+    </div>
+  </div>
+
+</div>
+
+<!-- 管理面板 -->
+<div class="panel-mask" id="admin-mask">
+  <div class="panel" id="admin-panel">
+    <div class="grabber"></div>
+    <button class="close-btn" id="admin-close">✕</button>
+    <h2>⚙️ 管理面板</h2>
+
+    <div class="stat-grid" id="admin-stats"></div>
+
+    <h3>积分操作</h3>
+    <div class="form-row">
+      <input id="adm-uid" placeholder="用户 ID" type="number" inputmode="numeric">
+      <input id="adm-amount" placeholder="积分" type="number" inputmode="numeric">
+    </div>
+    <div class="form-row">
+      <button class="btn green" id="adm-add">➕ 加分</button>
+      <button class="btn red" id="adm-sub">➖ 扣分</button>
+    </div>
+
+    <h3>封禁操作</h3>
+    <div class="form-row">
+      <input id="adm-ban-uid" placeholder="用户 ID" type="number" inputmode="numeric">
+    </div>
+    <div class="form-row">
+      <input id="adm-ban-reason" placeholder="原因（可空）">
+    </div>
+    <div class="form-row">
+      <button class="btn red" id="adm-ban">🚫 封禁</button>
+      <button class="btn green" id="adm-unban">✅ 解封</button>
+    </div>
+
+    <h3>用户列表 <button class="btn gray" id="adm-refresh" style="float:right;padding:4px 10px;font-size:12px">刷新</button></h3>
+    <div class="user-list" id="adm-userlist"></div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ==================== 用户身份 ====================
+function getUserId() {
+  let uid = localStorage.getItem('ai_uid');
+  if (!uid) {
+    uid = String(Math.floor(Math.random() * 9e9) + 1e9);
+    localStorage.setItem('ai_uid', uid);
+  }
+  return uid;
+}
+const USER_ID = getUserId();
+document.getElementById('uid-label').textContent = 'ID: ' + USER_ID;
+
+// ==================== 管理员 ====================
+const ADMIN_KEY = "change-me-to-a-strong-secret";
+const IS_ADMIN = ADMIN_KEY !== "change-me-to-a-strong-secret" && localStorage.getItem('ai_admin') === '1';
+if (IS_ADMIN) document.getElementById('btn-admin').style.display = 'flex';
+
+// ==================== Toast ====================
+let toastTimer;
+function toast(msg, duration = 1800) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('show'), duration);
+}
+
+// ==================== API ====================
+async function api(path, options = {}) {
+  const headers = {
+    'Content-Type': 'application/json',
+    'X-User-Id': USER_ID,
+    ...(options.headers || {}),
+  };
+  if (options.admin) headers['X-Admin-Key'] = ADMIN_KEY;
+
+  const res = await fetch(path, { ...options, headers });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ detail: res.statusText }));
+    throw new Error(err.detail || '请求失败');
+  }
+  return res.json();
+}
+
+// ==================== 聊天区 ====================
+const chatEl = document.getElementById('chat');
+
+function addMsg(role, content, meta = '') {
+  const div = document.createElement('div');
+  div.className = 'msg ' + role;
+  const bubble = document.createElement('div');
+  bubble.className = 'bubble';
+  bubble.textContent = content;
+  div.appendChild(bubble);
+  if (meta) {
+    const m = document.createElement('div');
+    m.className = 'meta';
+    m.textContent = meta;
+    div.appendChild(m);
+  }
+  chatEl.appendChild(div);
+  requestAnimationFrame(() => {
+    chatEl.scrollTop = chatEl.scrollHeight;
+  });
+  return div;
+}
+
+function addFileMsg(filename, content, meta = '') {
+  const div = document.createElement('div');
+  div.className = 'msg bot';
+  const bubble = document.createElement('div');
+  bubble.className = 'bubble file-bubble';
+
+  const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  a.textContent = '下载 ' + filename;
+  bubble.appendChild(a);
+
+  const preview = document.createElement('pre');
+  preview.textContent = content.slice(0, 800) + (content.length > 800 ? '\n...' : '');
+  bubble.appendChild(preview);
+
+  div.appendChild(bubble);
+  if (meta) {
+    const m = document.createElement('div');
+    m.className = 'meta';
+    m.textContent = meta;
+    div.appendChild(m);
+  }
+  chatEl.appendChild(div);
+  requestAnimationFrame(() => {
+    chatEl.scrollTop = chatEl.scrollHeight;
+  });
+}
+
+let typingEl = null;
+function showTyping() {
+  typingEl = addMsg('bot', '');
+  typingEl.querySelector('.bubble').innerHTML =
+    '<span class="typing"><i></i><i></i><i></i></span>';
+}
+function hideTyping() {
+  if (typingEl) { typingEl.remove(); typingEl = null; }
+}
+
+// ==================== 发送 ====================
+const inputEl = document.getElementById('input');
+const sendBtn = document.getElementById('send');
+
+async function sendMessage() {
+  const text = inputEl.value.trim();
+  if (!text) return;
+
+  addMsg('user', text);
+  inputEl.value = '';
+  inputEl.style.height = 'auto';
+  sendBtn.disabled = true;
+  showTyping();
+
+  try {
+    const data = await api('/api/chat', {
+      method: 'POST',
+      body: JSON.stringify({ text, username: '', first_name: 'Web用户' }),
+    });
+    hideTyping();
+
+    if (data.type === 'file' && data.ok) {
+      addFileMsg(
+        data.filename, data.content,
+        `本次消耗 ${data.cost} 分 · 剩余 ${data.remaining} 分 · ${data.model}`
+      );
+    } else {
+      addMsg('bot', data.reply || data.detail || '无回复',
+        data.ok && data.cost ? `消耗 ${data.cost} 分 · 剩余 ${data.remaining} 分` : '');
+    }
+    updateCredits(data.remaining);
+  } catch (e) {
+    hideTyping();
+    addMsg('bot', '❌ ' + e.message);
+  } finally {
+    sendBtn.disabled = false;
+  }
+}
+
+sendBtn.onclick = sendMessage;
+inputEl.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) {
+    e.preventDefault();
+    sendMessage();
+  }
+});
+inputEl.addEventListener('input', () => {
+  inputEl.style.height = 'auto';
+  inputEl.style.height = Math.min(inputEl.scrollHeight, 120) + 'px';
+});
+
+// ==================== 积分 ====================
+async function updateCredits(newVal) {
+  try {
+    let val = newVal;
+    if (val === undefined) {
+      const me = await api('/api/me');
+      val = me.credits;
+    }
+    document.getElementById('credits').textContent = val;
+    const pill = document.getElementById('credits-pill');
+    pill.classList.remove('bump');
+    void pill.offsetWidth;
+    pill.classList.add('bump');
+  } catch (e) {}
+}
+
+// ==================== 快捷操作 ====================
+document.getElementById('btn-checkin').onclick = async () => {
+  try {
+    const data = await api('/api/checkin', { method: 'POST' });
+    if (data.ok) {
+      addMsg('bot', `✅ 签到成功！+${data.checkin_credits} 积分`);
+      toast('🎁 签到成功 +' + data.checkin_credits);
+    } else {
+      addMsg('bot', `📅 今天已经签过啦`);
+      toast('📅 今天已签到');
+    }
+    updateCredits(data.credits);
+  } catch (e) {
+    toast('❌ ' + e.message);
+  }
+};
+
+document.getElementById('btn-me').onclick = async () => {
+  try {
+    const me = await api('/api/me');
+    addMsg('bot',
+      `👤 账户信息\n` +
+      `ID: ${USER_ID}\n` +
+      `💰 积分: ${me.credits}\n` +
+      `💬 消息数: ${me.msg_count}\n` +
+      `📝 对话记录: ${me.history}\n` +
+      `📅 上次签到: ${me.last_checkin || '从未签到'}`
+    );
+  } catch (e) { toast('❌ ' + e.message); }
+};
+
+document.getElementById('btn-clear').onclick = async () => {
+  if (!confirm('确定清空对话记忆？')) return;
+  try {
+    await api('/api/clear', { method: 'POST' });
+    chatEl.innerHTML = '';
+    addMsg('bot', '🧹 对话记忆已清空');
+    toast('🧹 已清空');
+  } catch (e) { toast('❌ ' + e.message); }
+};
+
+// ==================== 管理面板 ====================
+const adminMask = document.getElementById('admin-mask');
+
+async function loadAdminPanel() {
+  const data = await api('/api/admin/panel', { admin: true });
+  const g = data.global;
+  document.getElementById('admin-stats').innerHTML = `
+    <div class="stat-card"><div class="label">用户总数</div><div class="value">${g.total_users}</div></div>
+    <div class="stat-card"><div class="label">已封禁</div><div class="value">${g.banned_users}</div></div>
+    <div class="stat-card"><div class="label">积分总量</div><div class="value">${g.total_credits}</div></div>
+    <div class="stat-card"><div class="label">消息总量</div><div class="value">${g.total_msgs}</div></div>
+    <div class="stat-card" style="grid-column: span 2">
+      <div class="label">当前模型</div>
+      <div class="value small">${data.current_model}</div>
+    </div>
+  `;
+  await loadUserList();
+}
+
+async function loadUserList(page = 0) {
+  const data = await api('/api/admin/users?page=' + page, { admin: true });
+  const list = document.getElementById('adm-userlist');
+  if (!data.users.length) {
+    list.innerHTML = '<div style="padding:20px;text-align:center;color:#8e8e93">📭 暂无用户</div>';
+    return;
+  }
+  list.innerHTML = data.users.map(u => {
+    const name = u.first_name || u.username || '未知';
+    const initial = name.charAt(0).toUpperCase();
+    return `
+      <div class="user-row">
+        <div class="avatar">${initial}</div>
+        <div class="user-info">
+          <div class="user-name">${name}</div>
+          <div class="user-id">ID: ${u.user_id}</div>
+        </div>
+        <div class="user-credits">💰 ${u.credits}</div>
+        <div class="user-status ${u.banned ? 'ban' : 'ok'}">${u.banned ? '封禁' : '正常'}</div>
+      </div>
+    `;
+  }).join('') + `
+    <div style="text-align:center;padding:14px;color:#8e8e93;font-size:13px">
+      第 ${data.page + 1} / ${data.total_pages} 页
+      ${data.page > 0 ? `<button class="btn gray" onclick="loadUserList(${data.page - 1})" style="margin-left:8px;padding:6px 12px;font-size:12px">上一页</button>` : ''}
+      ${data.page < data.total_pages - 1 ? `<button class="btn gray" onclick="loadUserList(${data.page + 1})" style="margin-left:8px;padding:6px 12px;font-size:12px">下一页</button>` : ''}
+    </div>
+  `;
+}
+
+document.getElementById('btn-admin').onclick = () => {
+  adminMask.classList.add('show');
+  loadAdminPanel().catch(e => toast('❌ ' + e.message));
+};
+document.getElementById('admin-close').onclick = () => adminMask.classList.remove('show');
+adminMask.addEventListener('click', (e) => {
+  if (e.target === adminMask) adminMask.classList.remove('show');
+});
+
+document.getElementById('adm-refresh').onclick = () => loadUserList(0);
+
+document.getElementById('adm-add').onclick = async () => {
+  const uid = parseInt(document.getElementById('adm-uid').value);
+  const amount = parseInt(document.getElementById('adm-amount').value);
+  if (!uid || !amount) return toast('请填写 ID 和积分');
+  try {
+    await api('/api/admin/credits', {
+      method: 'POST', admin: true,
+      body: JSON.stringify({ user_id: uid, amount }),
+    });
+    toast('✅ 已加分'); loadUserList(0);
+  } catch (e) { toast('❌ ' + e.message); }
+};
+
+document.getElementById('adm-sub').onclick = async () => {
+  const uid = parseInt(document.getElementById('adm-uid').value);
+  const amount = parseInt(document.getElementById('adm-amount').value);
+  if (!uid || !amount) return toast('请填写 ID 和积分');
+  try {
+    await api('/api/admin/credits', {
+      method: 'POST', admin: true,
+      body: JSON.stringify({ user_id: uid, amount: -Math.abs(amount) }),
+    });
+    toast('✅ 已扣分'); loadUserList(0);
+  } catch (e) { toast('❌ ' + e.message); }
+};
+
+document.getElementById('adm-ban').onclick = async () => {
+  const uid = parseInt(document.getElementById('adm-ban-uid').value);
+  const reason = document.getElementById('adm-ban-reason').value || '未说明';
+  if (!uid) return toast('请填写用户 ID');
+  try {
+    await api('/api/admin/ban', {
+      method: 'POST', admin: true,
+      body: JSON.stringify({ user_id: uid, reason }),
+    });
+    toast('🚫 已封禁'); loadUserList(0);
+  } catch (e) { toast('❌ ' + e.message); }
+};
+
+document.getElementById('adm-unban').onclick = async () => {
+  const uid = parseInt(document.getElementById('adm-ban-uid').value);
+  if (!uid) return toast('请填写用户 ID');
+  try {
+    await api('/api/admin/unban', {
+      method: 'POST', admin: true,
+      body: JSON.stringify({ user_id: uid }),
+    });
+    toast('✅ 已解封'); loadUserList(0);
+  } catch (e) { toast('❌ ' + e.message); }
+};
+
+// ==================== 初始化 ====================
+(async function init() {
+  try {
+    const reg = await api('/api/register', {
+      method: 'POST',
+      body: JSON.stringify({ username: '', first_name: 'Web用户' }),
+    });
+    if (reg.is_new) {
+      addMsg('bot', `👋 欢迎使用小小臻AI！\n🎁 新用户礼包 +${reg.init_credits} 积分已到账\n\n直接发消息即可聊天；说"生成一个py文件"可以下载文件。`);
+    } else {
+      addMsg('bot', '👋 欢迎回来～直接发消息即可聊天。');
+    }
+    updateCredits(reg.credits);
+  } catch (e) {
+    addMsg('bot', '❌ 初始化失败: ' + e.message);
+  }
+})();
+</script>
+</body>
+</html>
